@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="#2B2B2B"
+        tools:context=".MainActivity">
+
+    <TextView
+            android:id="@+id/main_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="업데이트 파일이 발견되었습니다.\n\n"
+            android:textColor="#AAAAAA"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@id/main_button_os"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+    />
+
+    <TextView
+            android:id="@+id/main_text_os"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Version Reader Not Working.."
+            android:textColor="#AAAAAA"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@id/main_button_os"
+            app:layout_constraintLeft_toLeftOf="@id/main_button_os"
+            app:layout_constraintRight_toRightOf="@id/main_button_os"/>
+
+    <Button
+            android:id="@+id/main_button_os"
+            android:layout_width="300dp"
+            android:layout_height="90dp"
+            android:background="#444444"
+            android:text="OS 업데이트"
+            android:textColor="#AAAAAA"
+            android:textSize="24sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/main_button_st"/>
+
+    <TextView
+            android:id="@+id/main_text_os_new"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ update_os_file 19/07/30"
+            android:textColor="#00AAFF"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@id/main_button_os"
+            app:layout_constraintLeft_toLeftOf="@id/main_button_os"
+            app:layout_constraintRight_toRightOf="@id/main_button_os"/>
+
+
+    <TextView
+            android:id="@+id/main_text_st"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Version Reader Not Working.."
+            android:textColor="#AAAAAA"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@id/main_button_st"
+            app:layout_constraintLeft_toLeftOf="@id/main_button_st"
+            app:layout_constraintRight_toRightOf="@id/main_button_st"/>
+
+    <Button
+            android:id="@+id/main_button_st"
+            android:layout_width="300dp"
+            android:layout_height="90dp"
+            android:background="#444444"
+            android:text="ST MCU 업데이트"
+            android:textColor="#AAAAAA"
+            android:textSize="24sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/main_button_os"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+
+    <TextView
+            android:id="@+id/main_text_st_new"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ update_st_file 19/09/30"
+            android:textColor="#00AAFF"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@id/main_button_st"
+            app:layout_constraintLeft_toLeftOf="@id/main_button_st"
+            app:layout_constraintRight_toRightOf="@id/main_button_st"/>
+
+    <RelativeLayout
+            android:id="@+id/update_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" tools:layout_editor_absoluteY="29dp"
+            tools:layout_editor_absoluteX="0dp">
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
