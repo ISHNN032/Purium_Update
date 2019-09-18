@@ -1,4 +1,4 @@
-package com.neocartek.purium.update
+package com.neocartek.purium.update.update
 import android.os.Handler
 
 class TimeOutHelper {

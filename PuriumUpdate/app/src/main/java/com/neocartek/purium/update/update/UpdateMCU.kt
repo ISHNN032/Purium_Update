@@ -1,28 +1,24 @@
-package com.neocartek.purium.update
+package com.neocartek.purium.update.update
 
 import android.util.Log
 import android.content.Context
 import android.hardware.SerialManager
 import android.hardware.SerialPort
+import com.neocartek.purium.update.Constants
 import java.nio.ByteBuffer
 
 import java.io.IOException
 
 open class UpdateMCU internal constructor(var mContext: Context) {
 
-    private val mSerialManager: SerialManager
+    private val mSerialManager: SerialManager = mContext.getSystemService(Constants.SERIAL_SERVICE) as SerialManager
     private var mSerialPort: SerialPort? = null
 
     private var mInputBuffer: ByteBuffer? = null
     private var mOutputBuffer: ByteBuffer? = null
 
     protected val isOpen: Boolean
-        get() = if (mSerialPort != null) true else false
-
-    init {
-
-        mSerialManager = mContext.getSystemService(Constants.SERIAL_SERVICE) as SerialManager
-    }
+        get() = mSerialPort != null
 
     protected fun openSerial(name: String, speed: Int): Boolean {
         var ret = false

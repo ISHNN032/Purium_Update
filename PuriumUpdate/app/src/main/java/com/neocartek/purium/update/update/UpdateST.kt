@@ -1,4 +1,4 @@
-package com.neocartek.purium.update
+package com.neocartek.purium.update.update
 
 import com.neocartek.purium.update.Constants.ACK_COUNT
 import android.annotation.SuppressLint
@@ -44,7 +44,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
     private var m_path = ""
     private var u_sequence = 0
 
-
+    private var time_out_count = 0
 
     private val READ_SIZE = 1024
     private val FILE_HEADER = 1024 * 2
@@ -73,6 +73,10 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
             Log.e("ST UP", "--time out--")
             if (data != null) {
                 sendMCUPacket(cmd, data)
+            }
+            if(time_out_count++ >= 3){
+                sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
+                time_out_count = 0
             }
         }
     }

@@ -1,16 +1,31 @@
 package com.neocartek.purium.update
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
 import android.content.DialogInterface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.RecoverySystem
 import android.os.SystemClock
 import android.util.Log
+import com.neocartek.purium.update.update.UpdateST
+import com.neocartek.purium.update.update_intro.Command
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 
 class MainActivity : AppCompatActivity() {
+    init{
+        instance = this
+    }
+    companion object {
+        @SuppressLint("StaticFieldLeak")
+        private var instance: MainActivity? = null
+        fun applicationContext() : Context {
+            return instance!!.applicationContext
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -43,11 +58,9 @@ class MainActivity : AppCompatActivity() {
                         .setTitle("ST MCU Update")
                         .setMessage("ST MCU 업데이트를 진행합니다.")
                         .setPositiveButton(android.R.string.ok) { _,_->
-                            val fUpdate = File(path + File.separator + Constants.FILE_NAME_MCU_ST)
-
-                            if (fUpdate.isFile) {
-                                UpdateST(this, fUpdate.absolutePath)
-                            }
+                            Commander.update_path = path
+                            Commander.setSerialClient(this)
+                            Commander.sendCommand(Command.UPDATE_READY)
                         }
                         .setNegativeButton(
                             android.R.string.cancel
