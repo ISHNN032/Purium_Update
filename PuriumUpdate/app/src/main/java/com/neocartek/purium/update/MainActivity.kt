@@ -67,6 +67,14 @@ class MainActivity : AppCompatActivity() {
                         ) { dialog, _ -> dialog.dismiss() }
                         .show()
                 }
+                main_button_st_recover.setOnClickListener {
+                    Log.e("RECOVER","REBOOT ST MCU . . .")
+                    val fUpdate = File(path + File.separator + Constants.FILE_NAME_MCU_ST)
+
+                    if (fUpdate.isFile) {
+                        UpdateST(this, fUpdate.absolutePath)
+                    }
+                }
                 return
             }
             Constants.PREF_VALUE_OTA -> {

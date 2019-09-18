@@ -73,8 +73,10 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
             Log.e("ST UP", "--time out--")
             if (data != null) {
                 sendMCUPacket(cmd, data)
+                time_out_count++
             }
-            if(time_out_count++ >= 3){
+            if(time_out_count >= 3){
+                Log.e("ST UP", "--send Reboot--")
                 sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
                 time_out_count = 0
             }
