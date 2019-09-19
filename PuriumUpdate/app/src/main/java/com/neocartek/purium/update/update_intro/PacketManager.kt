@@ -64,12 +64,9 @@ class PacketManager {
                                 Log.e("UPDATE","READY ST MCU . . .")
                             }
                             Command.UPDATE_REBOOT.b -> {
+                                Commander.closeSerialClient()
                                 Log.e("UPDATE","REBOOT ST MCU . . .")
-                                val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
-
-                                if (fUpdate.isFile) {
-                                    UpdateST(MainActivity.applicationContext(), fUpdate.absolutePath)
-                                }
+                                Commander.update_ready = true
                             }
                         }
                     }

@@ -2,6 +2,7 @@ package com.neocartek.purium.update.update
 
 import com.neocartek.purium.update.Constants.ACK_COUNT
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.os.Environment
 import android.os.Message
@@ -9,12 +10,15 @@ import android.os.Handler
 import android.os.SystemClock
 import android.util.Log
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
 import java.util.Arrays
 
 import org.apache.http.util.ByteArrayBuffer
+import java.io.*
+import android.text.method.TextKeyListener.clear
+import android.content.SharedPreferences
+import android.content.Context.MODE_PRIVATE
+import com.neocartek.purium.update.MainActivity
+
 
 class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
@@ -75,9 +79,35 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
                 sendMCUPacket(cmd, data)
                 time_out_count++
             }
-            if(time_out_count >= 3){
+            if(time_out_count >= 5){
                 Log.e("ST UP", "--send Reboot--")
-                sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
+                var out: BufferedWriter?
+                try {
+                    var file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
+
+                    out = BufferedWriter(file)
+                    out.write("0")
+                    out.close()
+
+                    closeSerial()
+                    file_input?.close()
+                    file_input = null
+                    g_index = 1
+                    g_count = 0
+                    mAck_Count = ACK_COUNT
+                    mUpdateFile = null
+                    _checkBuf = null
+
+                    Thread.sleep(3000)
+
+                    startUpdate(m_path)
+                    file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
+                    out = BufferedWriter(file)
+                    out.write("1")
+                    out.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
                 time_out_count = 0
             }
         }
@@ -138,13 +168,37 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
 
     init {
+        startUpdate(path)
+    }
+
+    private fun startUpdate(path : String){
         m_path = path
-        if (openSerial("/dev/ttyS4", 19200)) {//115200
-            mUpdateFile = File(m_path)
+        u_sequence = getPrefInt("sequence")
+        Log.e("Update" , "sequence is $u_sequence")
 
-            Log.e("ST UP", "Start : " + mUpdateFile!!.absolutePath + " : " + mUpdateFile!!.isFile)
+        if(u_sequence == 0){
+            if (openSerial("/dev/ttyS4", 19200)) {//115200
+                mUpdateFile = File(m_path)
 
-            checkStartUpdate()
+                setPrefInt("sequence", 0)
+
+                checkStartUpdate()
+            }
+        }else{
+            file_input?.close()
+            file_input = null
+            g_index = 1
+            g_count = 0
+            mAck_Count = ACK_COUNT
+            mUpdateFile = null
+            _checkBuf = null
+            if (openSerial("/dev/ttyS5", 19200)) {//115200
+                mUpdateFile = File(m_path)
+
+                setPrefInt("sequence", 1)
+
+                checkStartUpdate()
+            }
         }
     }
 
@@ -367,12 +421,16 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
                         mUpdateFile = File(m_path)
                         Log.e("ST UP", "Start : " + mUpdateFile!!.absolutePath + " : " + mUpdateFile!!.isFile)
                         u_sequence++
+                        setPrefInt("sequence", 1)
+
                         checkStartUpdate()
                     }
                 }
                 1->{
                     val runtime = Runtime.getRuntime()
                     try {
+                        setPrefInt("sequence", 0)
+                        Thread.sleep(3000)
                         val cmd = "reboot"
                         runtime.exec(cmd)
                     } catch (e: Exception) {
@@ -498,5 +556,16 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
             sum += (b.toInt() and 0xff)
         }
         return sum
+    }
+
+    private fun setPrefInt(key : String, value : Int) {
+        val prefs = MainActivity.applicationContext().getSharedPreferences("Update", Context.MODE_PRIVATE)
+        val editor = prefs!!.edit()
+        editor.putInt(key, value).apply()
+    }
+
+    private fun getPrefInt(key : String) : Int{
+        val prefs = MainActivity.applicationContext().getSharedPreferences("Update", Context.MODE_PRIVATE)
+        return prefs.getInt(key, 0)
     }
 }

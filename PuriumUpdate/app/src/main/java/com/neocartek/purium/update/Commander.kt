@@ -13,6 +13,7 @@ import java.util.*
 object Commander {
     private var mSerialClient: SerialClient? = null
     var update_path = ""
+    var update_ready = false
 
     fun setSerialClient(context: Context) {
         mSerialClient = SerialClient(context)
@@ -21,8 +22,8 @@ object Commander {
     }
 
     fun closeSerialClient(){
-        mSerialClient!!.closeSerial(ST_MCU_0)
-        mSerialClient!!.closeSerial(ST_MCU_1)
+        mSerialClient?.closeSerial(ST_MCU_0)
+        mSerialClient?.closeSerial(ST_MCU_1)
     }
 
     fun sendCommand(command: Command, vararg data: Byte) {

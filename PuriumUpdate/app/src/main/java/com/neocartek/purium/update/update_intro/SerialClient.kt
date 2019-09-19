@@ -5,6 +5,7 @@ import android.hardware.SerialManager
 import android.hardware.SerialPort
 import android.util.Log
 import java.io.IOException
+import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 
 // Serial 포트를 열어 주어진 명령어와 데이터를 송수신 하는 Class
@@ -19,6 +20,8 @@ class SerialClient(context: Context) {
     private var mInputBuffer = ByteBuffer.allocateDirect(MAX_PACKET_SIZE)
     private var mOutputBuffer = ByteBuffer.allocateDirect(MAX_PACKET_SIZE)
 
+    private var mRThread : ReceiveThread? = null
+
     init {
         //의미 없는 toString 이나, Android Service 에서 찾을 수 없어 SERIAL_SERVICE 그대로 사용할 경우 빨간줄 생김.
         mSerialManager = context.getSystemService(SERIAL_SERVICE.toString()) as SerialManager
@@ -30,13 +33,22 @@ class SerialClient(context: Context) {
             ST_MCU_0 -> mSerialPort_0 = mSerialManager!!.openSerialPort(name, speed)
             ST_MCU_1 -> mSerialPort_1 = mSerialManager!!.openSerialPort(name, speed)
         }
-        ReceiveThread().start()
+        mRThread = ReceiveThread()
+        mRThread!!.start()
     }
 
     fun closeSerial(name: String){
+        mRThread?.interrupt()
         when(name){
-            ST_MCU_0 -> mSerialPort_0!!.close()
-            ST_MCU_1 -> mSerialPort_1!!.close()
+            ST_MCU_0 ->{
+                mSerialPort_0?.close()
+                mSerialPort_0 = null
+            }
+
+            ST_MCU_1 ->{
+                mSerialPort_1?.close()
+                mSerialPort_1 = null
+            }
         }
     }
 
@@ -107,22 +119,19 @@ class SerialClient(context: Context) {
         override fun run() {
             while (mSerialPort_0 != null) {
                 try {
-                    mInputBuffer.clear()
+                    //mInputBuffer.clear()
                     //mInputBuffer 에 값을 저장하고, ret에 길이를 반환하는 구조.
-                    ret = mSerialPort_0!!.read(mInputBuffer)
+                    //subRet = mSerialPort_1!!.read(mInputBuffer)
 
                     mInputBuffer.clear()
-                    subRet = mSerialPort_1!!.read(mInputBuffer)
-
-                    //읽어들인 두 값의 길이가 같지 않은 경우 무시한다.
-                    if(ret != subRet){
-                        Log.e("ERROR", "2 ports Messages not matching")
-                        //continue
-                    }
+                    ret = mSerialPort_0!!.read(mInputBuffer)
 
                     //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
                     mInputBuffer.get(buffer, 0, ret)
                 } catch (e: IOException) {
+                }
+                catch (ue : BufferUnderflowException){
+                    ue.printStackTrace()
                 }
                 if (ret > 0) {
                     readPacket(buffer, ret)

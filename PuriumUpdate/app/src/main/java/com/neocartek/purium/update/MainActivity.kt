@@ -30,6 +30,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val runtime = Runtime.getRuntime()
+        try {
+            var cmd = "am force-stop com.neocartek.purium.manager"
+            Log.e("STOP", "Purium_Manager")
+            var process = runtime.exec(cmd)
+            process.errorStream.close()
+            process.inputStream.close()
+            process.outputStream.close()
+        } catch (e: Exception) {
+            e.fillInStackTrace()
+        }
+
         main_button_os.isEnabled = false
         main_button_st.isEnabled = false
 
@@ -61,6 +73,14 @@ class MainActivity : AppCompatActivity() {
                             Commander.update_path = path
                             Commander.setSerialClient(this)
                             Commander.sendCommand(Command.UPDATE_READY)
+
+                            while(!Commander.update_ready) Thread.sleep(500)
+
+                            val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
+
+                            if (fUpdate.isFile) {
+                                UpdateST(MainActivity.applicationContext(), fUpdate.absolutePath)
+                            }
                         }
                         .setNegativeButton(
                             android.R.string.cancel

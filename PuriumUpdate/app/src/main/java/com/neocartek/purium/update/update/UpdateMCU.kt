@@ -20,6 +20,10 @@ open class UpdateMCU internal constructor(var mContext: Context) {
     protected val isOpen: Boolean
         get() = mSerialPort != null
 
+    private var mRThread : RecvThread? = null;
+
+
+
     protected fun openSerial(name: String, speed: Int): Boolean {
         var ret = false
         /**
@@ -35,7 +39,8 @@ open class UpdateMCU internal constructor(var mContext: Context) {
             mInputBuffer = ByteBuffer.allocateDirect(1032)
             mOutputBuffer = ByteBuffer.allocateDirect(1032)
 
-            RecvThread().start()
+            mRThread = RecvThread()
+            mRThread?.start()
 
             ret = true
         } catch (e: IOException) {
@@ -47,6 +52,7 @@ open class UpdateMCU internal constructor(var mContext: Context) {
     }
 
     protected fun closeSerial() {
+        mRThread?.interrupt()
         if (mSerialPort != null) {
             try {
                 mSerialPort!!.close()
