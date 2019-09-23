@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.RecoverySystem
@@ -13,6 +14,7 @@ import com.neocartek.purium.update.update.UpdateST
 import com.neocartek.purium.update.update_intro.Command
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     init{
@@ -64,6 +66,11 @@ class MainActivity : AppCompatActivity() {
     fun update(type: Int, path: String) {
         when (type) {
             Constants.PREF_VALUE_ST -> {
+                val file = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
+                main_text_st_new.text = Date(file.lastModified()).toString()
+                main_button_st.setTextColor(Color.WHITE)
+                main_button_st_recover.setTextColor(Color.WHITE)
+
                 main_button_st.isEnabled = true
                 main_button_st.setOnClickListener {
                     AlertDialog.Builder(this)
@@ -98,6 +105,10 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             Constants.PREF_VALUE_OTA -> {
+                val file = File(Commander.update_path + File.separator + Constants.FILE_NAME_CPU_OTA)
+                main_text_os_new.text = Date(file.lastModified()).toString()
+                main_button_os.setTextColor(Color.WHITE)
+
                 main_button_os.isEnabled = true
                 main_button_os.setOnClickListener {
                     AlertDialog.Builder(this)
