@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="#2B2B2B"
+        tools:context=".MainActivity">
+
+    <TextView
+            android:id="@+id/update_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:text="안전을 위하여 시스템 전원을 유지해\n주시기 바랍니다.\n\n잠시 후\n업데이트 모드로 재부팅 됩니다."
+            android:textAlignment="center"
+            android:textColor="#AAAAAA"
+            android:textSize="24sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    <ProgressBar
+            android:id="@+id/progressBar_ttyS4"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="false"
+            android:max="21"
+            android:minHeight="50dp"
+            android:minWidth="400dp"
+            android:progress="0"
+            android:progressBackgroundTint="@android:color/darker_gray"
+            android:progressTint="@color/colorPrimary"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/update_text" android:layout_marginTop="40dp"/>
+
+</android.support.constraint.ConstraintLayout>
