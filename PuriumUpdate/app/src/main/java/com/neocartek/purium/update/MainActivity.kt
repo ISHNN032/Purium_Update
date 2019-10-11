@@ -53,7 +53,8 @@ class MainActivity : AppCompatActivity() {
         //var path = "/storage/udiskh"
         //var types = intArrayOf(1)
 
-        Log.e("Path Extra", path)
+        if(path != null)
+            Log.e("Path Extra", path)
 
         if (types != null)
             for (i in types) {
