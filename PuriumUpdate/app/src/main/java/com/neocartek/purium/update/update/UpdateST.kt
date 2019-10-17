@@ -559,13 +559,13 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
     }
 
     private fun setPrefInt(key : String, value : Int) {
-        val prefs = MainActivity.applicationContext().getSharedPreferences("Update", Context.MODE_PRIVATE)
+        val prefs = mContext.getSharedPreferences("Update", Context.MODE_PRIVATE)
         val editor = prefs!!.edit()
         editor.putInt(key, value).apply()
     }
 
     private fun getPrefInt(key : String) : Int{
-        val prefs = MainActivity.applicationContext().getSharedPreferences("Update", Context.MODE_PRIVATE)
+        val prefs = mContext.getSharedPreferences("Update", Context.MODE_PRIVATE)
         return prefs.getInt(key, 0)
     }
 }

@@ -119,11 +119,10 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/main_button_st"/>
 
-    <RelativeLayout
+    <FrameLayout
             android:id="@+id/update_fragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" tools:layout_editor_absoluteY="29dp"
-            tools:layout_editor_absoluteX="0dp">
-    </RelativeLayout>
+            android:layout_height="match_parent">
+    </FrameLayout>
 
 </android.support.constraint.ConstraintLayout>

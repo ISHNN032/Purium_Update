@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.RecoverySystem
 import android.os.SystemClock
 import android.util.Log
+import com.neocartek.purium.update.update.UpdateFragment
 import com.neocartek.purium.update.update.UpdateST
 import com.neocartek.purium.update.update_intro.Command
 import kotlinx.android.synthetic.main.activity_main.*
@@ -17,17 +18,6 @@ import java.io.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
-    init{
-        instance = this
-    }
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var instance: MainActivity? = null
-        fun applicationContext() : Context {
-            return instance!!.applicationContext
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -82,12 +72,17 @@ class MainActivity : AppCompatActivity() {
                             Commander.setSerialClient(this)
                             Commander.sendCommand(Command.UPDATE_READY)
 
-                            while(!Commander.update_ready) Thread.sleep(500)
-
                             val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
-
                             if (fUpdate.isFile) {
-                                UpdateST(MainActivity.applicationContext(), fUpdate.absolutePath)
+                                Commander.update_Type = Constants.PREF_VALUE_ST
+                                Commander.update_File = fUpdate
+                                supportFragmentManager.beginTransaction()
+                                    .replace(R.id.update_fragment, UpdateFragment())
+                                    .commit()
+                                main_button_os.isEnabled = false
+                                main_button_st.isEnabled = false
+                                main_button_apk.isEnabled = false
+                                main_button_st_recover.isEnabled = false
                             }
                         }
                         .setNegativeButton(
@@ -116,30 +111,20 @@ class MainActivity : AppCompatActivity() {
                         .setTitle("OTA Update")
                         .setMessage("OTA Update 를 진행합니다.")
                         .setPositiveButton(android.R.string.ok, DialogInterface.OnClickListener { _, _ ->
+                            SystemClock.sleep(2000)
 
-                            val t = object : Thread() {
-                                override fun run() {
-                                    SystemClock.sleep(2000)
-
-                                    val fUpdate = File(path + File.separator + Constants.FILE_NAME_CPU_OTA)
-
-                                    try {
-                                        copyFile(File(fUpdate.absolutePath), File("/cache/ota.zip"))
-                                        Log.d("update","MainActivity copy file ${fUpdate.absolutePath} /cache/ota.zip")
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-
-                                    SystemClock.sleep(1000)
-                                    try {
-                                        RecoverySystem.installPackage(this@MainActivity, File("/cache/ota.zip"))
-                                    } catch (e: IOException) {
-                                        e.printStackTrace()
-                                    }
-                                }
+                            val fUpdate = File(path + File.separator + Constants.FILE_NAME_CPU_OTA)
+                            if (fUpdate.isFile) {
+                                Commander.update_Type = Constants.PREF_VALUE_OTA
+                                Commander.update_File = fUpdate
+                                supportFragmentManager.beginTransaction()
+                                    .replace(R.id.update_fragment, UpdateFragment())
+                                    .commit()
+                                main_button_os.isEnabled = false
+                                main_button_st.isEnabled = false
+                                main_button_apk.isEnabled = false
+                                main_button_st_recover.isEnabled = false
                             }
-                            t.start()
-                            return@OnClickListener
                         })
                         .setNegativeButton(
                             android.R.string.cancel

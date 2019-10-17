@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.neocartek.purium.update.update_intro.SerialClient
 import com.neocartek.purium.update.update_intro.*
+import java.io.File
 import java.util.*
 
 // Uart Serial 통신 : SerialSender
@@ -14,6 +15,9 @@ object Commander {
     private var mSerialClient: SerialClient? = null
     var update_path = ""
     var update_ready = false
+
+    var update_Type : Int = 0
+    lateinit var update_File : File
 
     fun setSerialClient(context: Context) {
         mSerialClient = SerialClient(context)
