@@ -14,7 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="100dp"
-            android:text="안전을 위하여 시스템 전원을 유지해\n주시기 바랍니다.\n\n잠시 후\n업데이트 모드로 재부팅 됩니다."
+            android:text= "Please keep the system powered for safety.\n\nAfter a while, the system will reboot to update mode."
             android:textAlignment="center"
             android:textColor="#AAAAAA"
             android:textSize="24sp"
