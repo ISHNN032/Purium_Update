@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                 main_button_st.setOnClickListener {
                     AlertDialog.Builder(this)
                         .setTitle("ST MCU Update")
-                        .setMessage("ST MCU 업데이트를 진행합니다.")
+                        .setMessage("ST MCU Update will be Started.")
                         .setPositiveButton(android.R.string.ok) { _,_->
                             Commander.update_path = path
                             Commander.setSerialClient(this)
@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                 main_button_os.setOnClickListener {
                     AlertDialog.Builder(this)
                         .setTitle("OTA Update")
-                        .setMessage("OTA Update 를 진행합니다.")
+                        .setMessage("OTA Update will be Started.")
                         .setPositiveButton(android.R.string.ok, DialogInterface.OnClickListener { _, _ ->
                             SystemClock.sleep(2000)
 
