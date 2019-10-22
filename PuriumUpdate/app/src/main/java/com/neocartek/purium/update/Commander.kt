@@ -21,13 +21,31 @@ object Commander {
 
     fun setSerialClient(context: Context) {
         mSerialClient = SerialClient(context)
-        mSerialClient!!.openSerial(ST_MCU_0, SERIAL_FREQUENCY)
-        mSerialClient!!.openSerial(ST_MCU_1, SERIAL_FREQUENCY)
+    }
+    fun openSerialClient(name: String) {
+        when (name) {
+            ST_MCU_0 -> {
+                mSerialClient!!.openSerial(ST_MCU_0, SERIAL_FREQUENCY)
+            }
+            ST_MCU_1 -> {
+                mSerialClient!!.openSerial(ST_MCU_1, SERIAL_FREQUENCY)
+            }
+        }
     }
 
     fun closeSerialClient(){
         mSerialClient?.closeSerial(ST_MCU_0)
         mSerialClient?.closeSerial(ST_MCU_1)
+    }
+    fun closeSerialClientPort(name: String) {
+        when (name) {
+            ST_MCU_0 -> {
+                mSerialClient?.closeSerial(ST_MCU_0)
+            }
+            ST_MCU_1 -> {
+                mSerialClient?.closeSerial(ST_MCU_1)
+            }
+        }
     }
 
     fun sendCommand(command: Command, vararg data: Byte) {

@@ -45,7 +45,7 @@ class UpdateFragment : Fragment() {
                 }
                 Constants.PREF_VALUE_OTA -> {
                     Log.e("update OTA", "OTA Update Start")
-                    //update(Constants.PREF_VALUE_OTA, Commander.update_File.absolutePath)
+                    update(Constants.PREF_VALUE_OTA, Commander.update_File.absolutePath)
                 }
                 else -> {
                     //

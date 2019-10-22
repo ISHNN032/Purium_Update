@@ -46,7 +46,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
     private var mUpdateFile: File? = null
 
     private var m_path = ""
-    private var u_sequence = 0
+    //private var u_sequence = 0
 
     private var time_out_count = 0
 
@@ -173,18 +173,18 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
     private fun startUpdate(path : String){
         m_path = path
-        u_sequence = getPrefInt("sequence")
-        Log.e("Update" , "sequence is $u_sequence")
+        //u_sequence = getPrefInt("sequence")
+        //Log.e("Update" , "sequence is $u_sequence")
 
-        if(u_sequence == 0){
-            if (openSerial("/dev/ttyS4", 19200)) {//115200
-                mUpdateFile = File(m_path)
+        if (openSerial("/dev/ttyS4", 19200)) {//115200
+            mUpdateFile = File(m_path)
 
-                setPrefInt("sequence", 0)
+            setPrefInt("sequence", 0)
 
-                checkStartUpdate()
-            }
-        }else{
+            checkStartUpdate()
+        }
+        /*
+        else{
             file_input?.close()
             file_input = null
             g_index = 1
@@ -200,6 +200,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
                 checkStartUpdate()
             }
         }
+        */
     }
 
     private fun checkStartUpdate() {
@@ -408,6 +409,18 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
             sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
             closeSerial()
+
+            val runtime = Runtime.getRuntime()
+            try {
+                setPrefInt("sequence", 0)
+                Thread.sleep(3000)
+                val cmd = "reboot"
+                runtime.exec(cmd)
+            } catch (e: Exception) {
+                e.fillInStackTrace()
+            }
+
+            /*
             when(u_sequence){
                 0->{
                     file_input!!.close()
@@ -438,6 +451,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
                     }
                 }
             }
+            */
         } else { // Update Fail
 
         }

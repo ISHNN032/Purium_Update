@@ -13,6 +13,7 @@ import android.util.Log
 import com.neocartek.purium.update.update.UpdateFragment
 import com.neocartek.purium.update.update.UpdateST
 import com.neocartek.purium.update.update_intro.Command
+import com.neocartek.purium.update.update_intro.ST_MCU_0
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.util.*
@@ -70,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok) { _,_->
                             Commander.update_path = path
                             Commander.setSerialClient(this)
+                            Commander.openSerialClient(ST_MCU_0)
                             Commander.sendCommand(Command.UPDATE_READY)
 
                             val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
