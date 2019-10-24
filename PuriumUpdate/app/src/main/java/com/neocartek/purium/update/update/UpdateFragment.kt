@@ -41,7 +41,7 @@ class UpdateFragment : Fragment() {
             when (Commander.update_Type) {
                 Constants.PREF_VALUE_ST -> {
                     Log.e("update ST", "ST Update Start")
-                    //update(Constants.PREF_VALUE_ST, Commander.update_File.absolutePath)
+                    update(Constants.PREF_VALUE_ST, Commander.update_File.absolutePath)
                 }
                 Constants.PREF_VALUE_OTA -> {
                     Log.e("update OTA", "OTA Update Start")
@@ -57,12 +57,8 @@ class UpdateFragment : Fragment() {
     suspend fun update(type: Int, path: String) {
         when (type) {
             Constants.PREF_VALUE_ST -> {
-                var job = GlobalScope.launch {
                     while(!Commander.update_ready) Thread.sleep(500)
-
-                    UpdateST(context!!, Commander.update_File.absolutePath)
-                }
-                job.join()
+                    UpdateST(context!!, Commander.update_File.absolutePath, "/dev/ttyS4")
             }
 
             Constants.PREF_VALUE_OTA -> {

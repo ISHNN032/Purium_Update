@@ -35,7 +35,7 @@ object Commander {
 
     fun closeSerialClient(){
         mSerialClient?.closeSerial(ST_MCU_0)
-        mSerialClient?.closeSerial(ST_MCU_1)
+        //mSerialClient?.closeSerial(ST_MCU_1)
     }
     fun closeSerialClientPort(name: String) {
         when (name) {

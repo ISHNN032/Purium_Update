@@ -20,7 +20,7 @@ import android.content.Context.MODE_PRIVATE
 import com.neocartek.purium.update.MainActivity
 
 
-class UpdateST(context: Context, path: String) : UpdateMCU(context) {
+class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context) {
 
     private val UPGRADE_READ = 0.toByte()
     private val UPGRADE_READ_SECCESS = 1.toByte()
@@ -46,6 +46,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
     private var mUpdateFile: File? = null
 
     private var m_path = ""
+    private var m_port = ""
     //private var u_sequence = 0
 
     private var time_out_count = 0
@@ -100,7 +101,7 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
                     Thread.sleep(3000)
 
-                    startUpdate(m_path)
+                    startUpdate(m_path, m_port)
                     file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
                     out = BufferedWriter(file)
                     out.write("1")
@@ -168,19 +169,17 @@ class UpdateST(context: Context, path: String) : UpdateMCU(context) {
 
 
     init {
-        startUpdate(path)
+        startUpdate(path, port)
     }
 
-    private fun startUpdate(path : String){
+    private fun startUpdate(path : String, port : String){
         m_path = path
+        m_port = port
         //u_sequence = getPrefInt("sequence")
         //Log.e("Update" , "sequence is $u_sequence")
 
-        if (openSerial("/dev/ttyS4", 19200)) {//115200
+        if (openSerial(port, 19200)) {//115200
             mUpdateFile = File(m_path)
-
-            setPrefInt("sequence", 0)
-
             checkStartUpdate()
         }
         /*

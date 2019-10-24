@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                     val fUpdate = File(path + File.separator + Constants.FILE_NAME_MCU_ST)
 
                     if (fUpdate.isFile) {
-                        UpdateST(this, fUpdate.absolutePath)
+                        UpdateST(this, fUpdate.absolutePath, "/dev/ttyS4")
                     }
                 }
                 return
