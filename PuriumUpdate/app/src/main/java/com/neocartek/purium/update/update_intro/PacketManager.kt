@@ -30,7 +30,7 @@ class PacketManager {
         return buffer
     }
 
-    fun unwrapPacket(buffer : ByteArray){
+    fun unwrapPacket(buffer : ByteArray, port: String){
         var byteString : String = ""
         for(b in buffer){
             var hex = Integer.toHexString(b.toUByte().toInt())
@@ -60,11 +60,11 @@ class PacketManager {
                     Command.ACKNOWLEDGE -> {
                         when(data[0]){
                             Command.UPDATE_READY.b -> {
-                                Commander.sendCommand(Command.UPDATE_REBOOT)
+                                Commander.sendCommand(Command.UPDATE_REBOOT ,port)
                                 Log.e("UPDATE","READY ST MCU . . .")
                             }
                             Command.UPDATE_REBOOT.b -> {
-                                Commander.closeSerialClient()
+                                Commander.closeSerialClient(port)
                                 Log.e("UPDATE","REBOOT ST MCU . . .")
                                 Commander.update_ready = true
                             }

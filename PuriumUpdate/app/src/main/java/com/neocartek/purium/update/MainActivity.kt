@@ -71,8 +71,6 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok) { _,_->
                             Commander.update_path = path
                             Commander.setSerialClient(this)
-                            Commander.openSerialClient(ST_MCU_0)
-                            Commander.sendCommand(Command.UPDATE_READY)
 
                             val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
                             if (fUpdate.isFile) {
@@ -81,6 +79,7 @@ class MainActivity : AppCompatActivity() {
                                 supportFragmentManager.beginTransaction()
                                     .replace(R.id.update_fragment, UpdateFragment())
                                     .commit()
+
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
                                 main_button_apk.isEnabled = false

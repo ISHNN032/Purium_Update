@@ -13,7 +13,11 @@ import android.view.ViewGroup
 import com.neocartek.purium.update.Commander
 import com.neocartek.purium.update.Constants
 import com.neocartek.purium.update.R
+import com.neocartek.purium.update.update_intro.Command
+import com.neocartek.purium.update.update_intro.ST_MCU_0
+import com.neocartek.purium.update.update_intro.ST_MCU_1
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.*
@@ -57,8 +61,34 @@ class UpdateFragment : Fragment() {
     suspend fun update(type: Int, path: String) {
         when (type) {
             Constants.PREF_VALUE_ST -> {
-                    while(!Commander.update_ready) Thread.sleep(500)
-                    UpdateST(context!!, Commander.update_File.absolutePath, "/dev/ttyS4")
+                Log.e("STUpdate", "Start Update ttyS4")
+                Commander.openSerialClient(ST_MCU_0)
+                Commander.sendCommand(Command.UPDATE_READY, ST_MCU_0)
+                while (!Commander.update_ready) Thread.sleep(500)
+                UpdateST(context!!, Commander.update_File.absolutePath, ST_MCU_0)
+                while (!Commander.update_complete) Thread.sleep(1000)
+                Commander.closeSerialClient(ST_MCU_0)
+
+
+                Log.e("STUpdate", "Start Update ttyS5")
+                Commander.update_ready = false
+                Commander.update_complete = false
+                Commander.openSerialClient(ST_MCU_1)
+                Commander.sendCommand(Command.UPDATE_READY, ST_MCU_1)
+                while (!Commander.update_ready) Thread.sleep(500)
+                UpdateST(context!!, Commander.update_File.absolutePath, ST_MCU_1)
+                while (!Commander.update_complete) Thread.sleep(1000)
+                Commander.closeSerialClient(ST_MCU_1)
+
+                Log.e("STUpdate", "Update Complete. Reboot")
+                val runtime = Runtime.getRuntime()
+                try {
+                    Thread.sleep(3000)
+                    val cmd = "reboot"
+                    runtime.exec(cmd)
+                } catch (e: Exception) {
+                    e.fillInStackTrace()
+                }
             }
 
             Constants.PREF_VALUE_OTA -> {

@@ -38,13 +38,13 @@ class SerialClient(context: Context) {
             ST_MCU_0 -> {
                 mSerialPort_0 = mSerialManager!!.openSerialPort(name, speed)
                 port0Context = GlobalScope.launch {
-                    receiveCoroutine()
+                    receiveCoroutine(name)
                 }
             }
             ST_MCU_1 -> {
                 mSerialPort_1 = mSerialManager!!.openSerialPort(name, speed)
                 port1Context = GlobalScope.launch {
-                    receiveCoroutine()
+                    receiveCoroutine(name)
                 }
             }
         }
@@ -66,18 +66,26 @@ class SerialClient(context: Context) {
     }
 
     // 명령어를 Packet 형태로 Wrapping 하여 전송
-    fun sendPacket(command: Byte, data: ByteArray) {
+    fun sendPacket(command: Byte, port: String, data: ByteArray) {
         var packet = mPacketManager.wrapPacket(command, data)
         try {
             mOutputBuffer.clear()
             mOutputBuffer.put(packet)
-            mSerialPort_0!!.write(mOutputBuffer, packet.size)
+
+            when(port){
+                ST_MCU_0->{
+                    mSerialPort_0?.write(mOutputBuffer, packet.size)
+                }
+                ST_MCU_1->{
+                    mSerialPort_1?.write(mOutputBuffer, packet.size)
+                }
+            }
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-    fun sendPacket(command: Byte, data: ByteArray, subData: ByteArray) {
+    fun sendPacket(command: Byte, port: String, data: ByteArray, subData: ByteArray) {
         var packet = mPacketManager.wrapPacket(command, data)
         var subPacket = mPacketManager.wrapPacket(command, subData)
         try {
@@ -90,7 +98,7 @@ class SerialClient(context: Context) {
     }
 
     // RecvThread 로 부터 들어오는 데이터를 처리
-    fun readPacket(data: ByteArray, length: Int) {
+    fun readPacket(data: ByteArray, length: Int, port: String) {
         var packetlenth = 0
         var packet: List<Byte> = listOf()
         var ispacket = false
@@ -101,7 +109,7 @@ class SerialClient(context: Context) {
             if (packetlenth == 0) {
                 //기존의 packet 이 있는 경우: 해석 후, 처리한다.
                 if (packet.isNotEmpty() && ispacket) {
-                    mPacketManager.unwrapPacket(packet.toByteArray())
+                    mPacketManager.unwrapPacket(packet.toByteArray(), port)
                     ispacket = false
                 }
                 //헤더를 발견한 경우: 헤더를 기준으로 list 를 생성하고 남은 길이를 받아온다.
@@ -120,23 +128,45 @@ class SerialClient(context: Context) {
 
 
     // 시리얼 포트가 닫힐 때 까지 데이터를 받는 스레드
-    private fun receiveCoroutine() {
+    private fun receiveCoroutine(port : String) {
         var ret = 0
         var subRet = 0
         var buffer = ByteArray(MAX_PACKET_SIZE)
-        while (mSerialPort_0 != null) {
-            try {
-                //mInputBuffer 에 값을 저장하고, ret에 길이를 반환하는 구조.
-                mInputBuffer.clear()
-                ret = mSerialPort_0!!.read(mInputBuffer)
 
-                //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
-                mInputBuffer.get(buffer, 0, ret)
-            } catch (e: IOException) {
-            } catch (ue: BufferUnderflowException) { }
-            if (ret > 0) {
-                readPacket(buffer, ret)
-            } else {
+        when(port){
+            ST_MCU_0->{
+                while (mSerialPort_0 != null) {
+                    try {
+                        //mInputBuffer 에 값을 저장하고, ret에 길이를 반환하는 구조.
+                        mInputBuffer.clear()
+                        ret = mSerialPort_0!!.read(mInputBuffer)
+
+                        //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
+                        mInputBuffer.get(buffer, 0, ret)
+                    } catch (e: IOException) {
+                    } catch (ue: BufferUnderflowException) { }
+                    if (ret > 0) {
+                        readPacket(buffer, ret, port)
+                    } else {
+                    }
+                }
+            }
+            ST_MCU_1->{
+                while (mSerialPort_1 != null) {
+                    try {
+                        //mInputBuffer 에 값을 저장하고, ret에 길이를 반환하는 구조.
+                        mInputBuffer.clear()
+                        ret = mSerialPort_1!!.read(mInputBuffer)
+
+                        //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
+                        mInputBuffer.get(buffer, 0, ret)
+                    } catch (e: IOException) {
+                    } catch (ue: BufferUnderflowException) { }
+                    if (ret > 0) {
+                        readPacket(buffer, ret, port)
+                    } else {
+                    }
+                }
             }
         }
     }

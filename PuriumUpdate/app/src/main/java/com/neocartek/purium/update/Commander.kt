@@ -15,6 +15,7 @@ object Commander {
     private var mSerialClient: SerialClient? = null
     var update_path = ""
     var update_ready = false
+    var update_complete = false
 
     var update_Type : Int = 0
     lateinit var update_File : File
@@ -37,7 +38,7 @@ object Commander {
         mSerialClient?.closeSerial(ST_MCU_0)
         //mSerialClient?.closeSerial(ST_MCU_1)
     }
-    fun closeSerialClientPort(name: String) {
+    fun closeSerialClient(name: String) {
         when (name) {
             ST_MCU_0 -> {
                 mSerialClient?.closeSerial(ST_MCU_0)
@@ -48,11 +49,11 @@ object Commander {
         }
     }
 
-    fun sendCommand(command: Command, vararg data: Byte) {
-        mSerialClient!!.sendPacket(command.b, data)
+    fun sendCommand(command: Command, port : String, vararg data: Byte) {
+        mSerialClient!!.sendPacket(command.b, port, data)
     }
 
-    fun sendCommand(command: Command, data: ByteArray, subData: ByteArray) {
-        mSerialClient!!.sendPacket(command.b, data, subData)
+    fun sendCommand(command: Command, port : String, data: ByteArray, subData: ByteArray) {
+        mSerialClient!!.sendPacket(command.b, port, data, subData)
     }
 }

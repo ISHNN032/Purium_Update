@@ -17,6 +17,7 @@ import java.io.*
 import android.text.method.TextKeyListener.clear
 import android.content.SharedPreferences
 import android.content.Context.MODE_PRIVATE
+import com.neocartek.purium.update.Commander
 import com.neocartek.purium.update.MainActivity
 
 
@@ -408,16 +409,7 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
 
             sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
             closeSerial()
-
-            val runtime = Runtime.getRuntime()
-            try {
-                setPrefInt("sequence", 0)
-                Thread.sleep(3000)
-                val cmd = "reboot"
-                runtime.exec(cmd)
-            } catch (e: Exception) {
-                e.fillInStackTrace()
-            }
+            Commander.update_complete = true
 
             /*
             when(u_sequence){
