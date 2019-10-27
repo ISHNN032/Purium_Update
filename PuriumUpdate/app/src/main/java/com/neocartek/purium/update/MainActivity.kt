@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity() {
                 val file = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
                 main_text_st_new.text = Date(file.lastModified()).toString()
                 main_button_st.setTextColor(Color.WHITE)
-                main_button_st_recover.setTextColor(Color.WHITE)
 
                 main_button_st.isEnabled = true
                 main_button_st.setOnClickListener {
@@ -72,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                             Commander.update_path = path
                             Commander.setSerialClient(this)
 
-                            val fUpdate = File(Commander.update_path + File.separator + Constants.FILE_NAME_MCU_ST)
+                            val fUpdate = File(path + File.separator + Constants.FILE_NAME_MCU_ST)
                             if (fUpdate.isFile) {
                                 Commander.update_Type = Constants.PREF_VALUE_ST
                                 Commander.update_File = fUpdate
@@ -83,21 +82,12 @@ class MainActivity : AppCompatActivity() {
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
                                 main_button_apk.isEnabled = false
-                                main_button_st_recover.isEnabled = false
                             }
                         }
                         .setNegativeButton(
                             android.R.string.cancel
                         ) { dialog, _ -> dialog.dismiss() }
                         .show()
-                }
-                main_button_st_recover.setOnClickListener {
-                    Log.e("RECOVER","REBOOT ST MCU . . .")
-                    val fUpdate = File(path + File.separator + Constants.FILE_NAME_MCU_ST)
-
-                    if (fUpdate.isFile) {
-                        UpdateST(this, fUpdate.absolutePath, "/dev/ttyS4")
-                    }
                 }
                 return
             }
@@ -124,7 +114,6 @@ class MainActivity : AppCompatActivity() {
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
                                 main_button_apk.isEnabled = false
-                                main_button_st_recover.isEnabled = false
                             }
                         })
                         .setNegativeButton(

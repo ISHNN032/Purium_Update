@@ -1,6 +1,8 @@
 package com.neocartek.purium.update
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.support.v4.app.FragmentActivity
 import android.util.Log
 import com.neocartek.purium.update.update_intro.SerialClient
 import com.neocartek.purium.update.update_intro.*

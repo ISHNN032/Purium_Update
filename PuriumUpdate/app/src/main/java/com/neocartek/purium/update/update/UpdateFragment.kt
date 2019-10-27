@@ -3,11 +3,14 @@ package com.neocartek.purium.update.update
 import android.view.ContextMenu
 
 import android.os.Bundle
+import android.os.Handler
 import android.os.RecoverySystem
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.View
 import android.os.SystemClock
+import android.support.v7.app.AlertDialog
+import android.support.v7.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.neocartek.purium.update.Commander
@@ -16,13 +19,24 @@ import com.neocartek.purium.update.R
 import com.neocartek.purium.update.update_intro.Command
 import com.neocartek.purium.update.update_intro.ST_MCU_0
 import com.neocartek.purium.update.update_intro.ST_MCU_1
+import kotlinx.android.synthetic.main.fragment_update.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.*
 
+
+
 class UpdateFragment : Fragment() {
+    companion object {
+        internal var instance: UpdateFragment? = null
+    }
+
+    init {
+        instance = this
+    }
+
     @Override
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return when (Commander.update_Type) {
@@ -38,18 +52,18 @@ class UpdateFragment : Fragment() {
         }
     }
 
-    @Override
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
         runBlocking {
             when (Commander.update_Type) {
                 Constants.PREF_VALUE_ST -> {
                     Log.e("update ST", "ST Update Start")
-                    update(Constants.PREF_VALUE_ST, Commander.update_File.absolutePath)
+                    update(Constants.PREF_VALUE_ST, ST_MCU_0)
+                    update(Constants.PREF_VALUE_ST, ST_MCU_1)
                 }
                 Constants.PREF_VALUE_OTA -> {
                     Log.e("update OTA", "OTA Update Start")
-                    update(Constants.PREF_VALUE_OTA, Commander.update_File.absolutePath)
+                    update(Constants.PREF_VALUE_OTA, "")
                 }
                 else -> {
                     //
@@ -58,37 +72,86 @@ class UpdateFragment : Fragment() {
         }
     }
 
-    suspend fun update(type: Int, path: String) {
+    suspend fun update(type: Int, port: String) {
         when (type) {
             Constants.PREF_VALUE_ST -> {
-                Log.e("STUpdate", "Start Update ttyS4")
-                Commander.openSerialClient(ST_MCU_0)
-                Commander.sendCommand(Command.UPDATE_READY, ST_MCU_0)
-                while (!Commander.update_ready) Thread.sleep(500)
-                UpdateST(context!!, Commander.update_File.absolutePath, ST_MCU_0)
-                while (!Commander.update_complete) Thread.sleep(1000)
-                Commander.closeSerialClient(ST_MCU_0)
+                    Log.e("STUpdate", "Start Update $port")
+                Commander.openSerialClient(port)
+
+                val handler = Handler()
+                val runnable = object : Runnable {
+                    override fun run() {
+
+                        if(port == ST_MCU_1 && !Commander.update_complete){
+                            handler.postDelayed(this, 10000)
+                            return
+                        }
+
+                        activity?.runOnUiThread {
+                            when (port){
+                                ST_MCU_0->
+                                    textView_ttyS4_Progress.text = String.format("Sending UPDATE_READY to %s",port)
+                                ST_MCU_1->
+                                    textView_ttyS5_Progress.text = String.format("Sending UPDATE_READY to %s",port)
+                            }
+                        }
+                        Commander.update_ready = false
+                        for(i in 1..3){
+                            Commander.sendCommand(Command.UPDATE_READY, port)
+                            Log.e("STUpdate $port", "Waiting for update_ready")
+                            if(Commander.update_ready) {
+                                Log.e("STUpdate $port", "update ready")
+                                UpdateST(context!!, Commander.update_File.absolutePath, port)
+                                return
+                            }
+                            Thread.sleep(3000)
+                        }
+
+                        //update_ready 에 대한 ACK 가 3회까지 오지 않았을 경우
+                        for(i in 1..3){
+                            Log.e("STUpdate", "update_ready ACK Failed! reset MCU power!")
+                            var out: BufferedWriter?
+                            try {
+                                var file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
+                                out = BufferedWriter(file)
+                                out.write("0")
+                                out.close()
+
+                                Thread.sleep(3000)
+
+                                file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
+                                out = BufferedWriter(file)
+                                out.write("1")
+                                out.close()
 
 
-                Log.e("STUpdate", "Start Update ttyS5")
-                Commander.update_ready = false
-                Commander.update_complete = false
-                Commander.openSerialClient(ST_MCU_1)
-                Commander.sendCommand(Command.UPDATE_READY, ST_MCU_1)
-                while (!Commander.update_ready) Thread.sleep(500)
-                UpdateST(context!!, Commander.update_File.absolutePath, ST_MCU_1)
-                while (!Commander.update_complete) Thread.sleep(1000)
-                Commander.closeSerialClient(ST_MCU_1)
-
-                Log.e("STUpdate", "Update Complete. Reboot")
-                val runtime = Runtime.getRuntime()
-                try {
-                    Thread.sleep(3000)
-                    val cmd = "reboot"
-                    runtime.exec(cmd)
-                } catch (e: Exception) {
-                    e.fillInStackTrace()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+                            Thread.sleep(5000)
+                            if(Commander.update_ready) {
+                                Log.e("STUpdate", "update ready - download mode")
+                                UpdateST(context!!, Commander.update_File.absolutePath, port)
+                                return
+                            }
+                        }
+                        //3번 GPIO 리셋 후, 문제가 발생했을 경우
+                        activity?.runOnUiThread {
+                            // 다이얼로그
+                            val builder =
+                                AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppCompat_Light_Dialog))
+                            builder.setTitle("ERROR with Serial $port")
+                                .setMessage("Cannot get info from Serial port : $port")
+                                .setCancelable(false)
+                                .setPositiveButton("OK") { dialog, _ ->
+                                    dialog.dismiss()
+                                }
+                            builder.show()
+                        }
+                    }
                 }
+                // trigger first time
+                handler.post(runnable)
             }
 
             Constants.PREF_VALUE_OTA -> {
@@ -109,6 +172,37 @@ class UpdateFragment : Fragment() {
                     }
                 }
                 job.join()
+            }
+        }
+    }
+
+    fun UpdateText(text: String, port: String) {
+        activity?.runOnUiThread {
+            when (port) {
+                ST_MCU_0 ->
+                    textView_ttyS4_Progress.text = text
+                ST_MCU_1 ->
+                    textView_ttyS5_Progress.text = text
+            }
+        }
+    }
+
+    fun setUpdateProgress(max: Int, port: String) {
+        when (port) {
+            ST_MCU_0 ->
+                progressBar_ttyS4.max = max
+            ST_MCU_1 ->
+                progressBar_ttyS5.max = max
+        }
+    }
+
+    fun UpdateProgress(progress: Int, port: String) {
+        activity?.runOnUiThread {
+            when (port) {
+                ST_MCU_0 ->
+                    progressBar_ttyS4.progress = progress
+                ST_MCU_1 ->
+                    progressBar_ttyS5.progress = progress
             }
         }
     }

@@ -4,10 +4,10 @@ import android.content.Context
 import android.hardware.SerialManager
 import android.hardware.SerialPort
 import android.util.Log
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import com.neocartek.purium.update.Commander
+import kotlinx.coroutines.*
 import java.io.IOException
+import java.lang.Runnable
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -36,16 +36,26 @@ class SerialClient(context: Context) {
         Log.e("Intro", "Start Receive Coroutine : $name")
         when (name) {
             ST_MCU_0 -> {
-                mSerialPort_0 = mSerialManager!!.openSerialPort(name, speed)
-                port0Context = GlobalScope.launch {
-                    receiveCoroutine(name)
-                }
+                Thread(Runnable {
+                    runBlocking {
+                        mSerialPort_0 = mSerialManager!!.openSerialPort(name, speed)
+                        port0Context = GlobalScope.launch {
+                            receiveCoroutine(name)
+                        }
+                        (port0Context as Job).join()
+                    }
+                }).start()
             }
             ST_MCU_1 -> {
-                mSerialPort_1 = mSerialManager!!.openSerialPort(name, speed)
-                port1Context = GlobalScope.launch {
-                    receiveCoroutine(name)
-                }
+                Thread(Runnable {
+                    runBlocking {
+                        mSerialPort_1 = mSerialManager!!.openSerialPort(name, speed)
+                        port1Context = GlobalScope.launch {
+                            receiveCoroutine(name)
+                        }
+                        (port1Context as Job).join()
+                    }
+                }).start()
             }
         }
     }
@@ -141,8 +151,15 @@ class SerialClient(context: Context) {
                         mInputBuffer.clear()
                         ret = mSerialPort_0!!.read(mInputBuffer)
 
-                        //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
                         mInputBuffer.get(buffer, 0, ret)
+
+                        var byteString = ""
+                        for (b in buffer) {
+                            var hex = Integer.toHexString(b.toUByte().toInt())
+                            byteString += "| $hex "
+                        }
+                        Log.e("Buffer - Received Byte Buffer", byteString)
+
                     } catch (e: IOException) {
                     } catch (ue: BufferUnderflowException) { }
                     if (ret > 0) {
@@ -158,8 +175,15 @@ class SerialClient(context: Context) {
                         mInputBuffer.clear()
                         ret = mSerialPort_1!!.read(mInputBuffer)
 
-                        //subRet 의 값을 읽어들인 InputBuffer 를 최종으로 사용한다.
                         mInputBuffer.get(buffer, 0, ret)
+
+                        var byteString = ""
+                        for (b in buffer) {
+                            var hex = Integer.toHexString(b.toUByte().toInt())
+                            byteString += "| $hex "
+                        }
+                        Log.e("Buffer - Received Byte Buffer", byteString)
+
                     } catch (e: IOException) {
                     } catch (ue: BufferUnderflowException) { }
                     if (ret > 0) {

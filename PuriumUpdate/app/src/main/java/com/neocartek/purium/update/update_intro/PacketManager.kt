@@ -5,6 +5,7 @@ import com.neocartek.purium.update.Commander
 import com.neocartek.purium.update.Constants
 import com.neocartek.purium.update.MainActivity
 import com.neocartek.purium.update.update.UpdateST
+import kotlinx.android.synthetic.main.fragment_update.*
 import java.io.File
 
 
@@ -64,15 +65,14 @@ class PacketManager {
                                 Log.e("UPDATE","READY ST MCU . . .")
                             }
                             Command.UPDATE_REBOOT.b -> {
-                                Commander.closeSerialClient(port)
                                 Log.e("UPDATE","REBOOT ST MCU . . .")
-                                Commander.update_ready = true
                             }
                         }
                     }
                     Command.UPDATE_BOOT_COMP -> {
-                        Log.e("UPDATE","ST MCU BOOT COMPLETED ! !")
-                        //Todo Update ST MCU
+                        Log.e("UPDATE","ST MCU D-BOOT COMPLETE")
+                        Commander.closeSerialClient(port)
+                        Commander.update_ready = true
                     }
                     Command.VERSION_INFO -> {
                         var versionInfo = ""

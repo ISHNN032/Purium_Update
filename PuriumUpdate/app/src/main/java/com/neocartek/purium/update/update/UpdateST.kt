@@ -3,6 +3,7 @@ package com.neocartek.purium.update.update
 import com.neocartek.purium.update.Constants.ACK_COUNT
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Context
 import android.os.Environment
 import android.os.Message
@@ -19,9 +20,13 @@ import android.content.SharedPreferences
 import android.content.Context.MODE_PRIVATE
 import com.neocartek.purium.update.Commander
 import com.neocartek.purium.update.MainActivity
+import com.neocartek.purium.update.update_intro.Command
+import com.neocartek.purium.update.update_intro.ST_MCU_0
+import com.neocartek.purium.update.update_intro.ST_MCU_1
+import kotlinx.android.synthetic.main.fragment_update.*
 
 
-class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context) {
+class UpdateST(context: Context, path: String, port: String) : UpdateMCU(context) {
 
     private val UPGRADE_READ = 0.toByte()
     private val UPGRADE_READ_SECCESS = 1.toByte()
@@ -73,15 +78,14 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
 
     private val gData = ByteArrayBuffer(0)
 
-
     private val timeoutListenerGET_STATE = object : TimeOutHelper.ITimeOut {
         override fun onTimeOut(cmd: Byte, data: ByteArray?) {
-            Log.e("ST UP", "--time out--")
+            Log.e("ST UP", "--time out-- $cmd $m_port")
             if (data != null) {
                 sendMCUPacket(cmd, data)
                 time_out_count++
             }
-            if(time_out_count >= 5){
+            if (time_out_count >= 5) {
                 Log.e("ST UP", "--send Reboot--")
                 var out: BufferedWriter?
                 try {
@@ -124,10 +128,10 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
 
             when (action.toByte()) {
                 GET_STATE -> if (msg.arg1 == FD_RSPS.MODE_NORMAL.toInt()) {
-                    Log.d("UPDATE","Start Update -> Let set download mode")
+                    Log.d("UPDATE", "Start Update -> Let set download mode")
                     sendMCUPacket(FD_RQST.CMD_READ, byteArrayOf(FD_RQST.DATA_READ))
                 }
-                UPGRADE_INFO, UPGRADE_DATA -> Log.d("UPDATE","Update Info:" + msg.arg1 + ":" + msg.arg2)
+                UPGRADE_INFO, UPGRADE_DATA -> Log.d("UPDATE", "Update Info:" + msg.arg1 + ":" + msg.arg2)
                 UPGRADE_VIEW -> if (msg.arg2 == VIEW_SUCCESS) {
 
                     resultUpdate(true)
@@ -173,13 +177,13 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
         startUpdate(path, port)
     }
 
-    private fun startUpdate(path : String, port : String){
+    private fun startUpdate(path: String, port: String) {
         m_path = path
         m_port = port
         //u_sequence = getPrefInt("sequence")
         //Log.e("Update" , "sequence is $u_sequence")
 
-        if (openSerial(port, 19200)) {//115200
+        if (openSerial(m_port, 19200)) {//115200
             mUpdateFile = File(m_path)
             checkStartUpdate()
         }
@@ -213,7 +217,7 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                 SystemClock.sleep(1500)
 
                 sendMCUPacket(FD_RQST.CMD_GET_STATE, byteArrayOf(FD_RQST.DATA_GET_STATE))
-
+                UpdateFragment.instance?.UpdateText("Getting $m_port STATE", m_port)
             } else {
                 // fail update (because don't find update file)
                 resultUpdate(false)
@@ -221,11 +225,11 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
         }, 1500)
     }
 
-    override fun ParsingPacket(buf: ByteArray, length: Int) {
-        Log.d("UPDATE","ST MCU Data Parsing")
-        dumpRawPacket("ParsingPacket::lengh:$length", buf, length)
+    override fun ParsingPacket(buf: ByteArray, len: Int) {
+        Log.d("UPDATE", "ST MCU Data Parsing")
+        dumpRawPacket("ParsingPacket::lengh:$len", buf, len)
 
-        for (i in 0 until length) {
+        for (i in 0 until len) {
             when (buf[i]) {
                 PACKET_HEADER -> gData.append(buf, i, 1)
                 PACKET_TAIL -> if (gData.length() > 0) {
@@ -276,9 +280,12 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
         when (cmd) {
             GET_STATE    //DOWN_READ
             -> if (data[0] == FD_RSPS.MODE_DOWNLOAD) {
+
+
                 sendPostHandler(cmd.toInt(), data[0].toInt(), 0)
                 mAck_Count = ACK_COUNT
                 sendMCUPacket(FD_RQST.CMD_READ_SUCCESS, byteArrayOf(FD_RQST.DATA_READ_SUCCESS))
+                UpdateFragment.instance?.UpdateText("$m_port STATE received", m_port)
                 Log.e("Upgrade", "STATE")
             } else if (data[0] == FD_RSPS.MODE_NORMAL) {
                 mAck_Count = ACK_COUNT
@@ -314,6 +321,7 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                 mAck_Count = ACK_COUNT
                 SendFileData(UPGRADE_INFO.toInt(), true)
                 Log.e("Upgrade", "RE:SU")
+                UpdateFragment.instance?.UpdateText("sending Update Infomation", m_port)
             } else {
                 if (mAck_Count > 0) {
                     sendMCUPacket(FD_RQST.CMD_READ_SUCCESS, byteArrayOf(FD_RQST.DATA_READ_SUCCESS))
@@ -329,6 +337,8 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                 mAck_Count = ACK_COUNT
                 SendFileData(UPGRADE_DATA.toInt(), true)
                 Log.e("Upgrade", "INFO")
+                UpdateFragment.instance?.UpdateText("Send Update File Data to $m_port", m_port)
+                UpdateFragment.instance?.setUpdateProgress((mUpdateFile!!.length().toInt() - FILE_HEADER) / PKG_SIZE, m_port)
             } else {
                 if (mAck_Count > 0) {
                     SendFileData(UPGRADE_INFO.toInt(), false)
@@ -342,7 +352,9 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
             UPGRADE_DATA -> if (data[0] == FD_RSPS.NON_ERROR) {
                 mAck_Count = ACK_COUNT
                 Log.e("Upgrade", "DATA")
+
                 sendPostHandler(cmd.toInt(), g_index - 1, g_count)
+                UpdateFragment.instance?.UpdateProgress(g_index.toInt(), m_port)
             } else {
                 if (mAck_Count > 0) {
                     SendFileData(UPGRADE_DATA.toInt(), false)
@@ -357,6 +369,8 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                 mAck_Count = ACK_COUNT
                 SendFileData(UPGRADE_DATA.toInt(), true)
                 Log.e("Upgrade", "NEXT_DATA")
+
+                UpdateFragment.instance?.UpdateProgress(g_index.toInt(), m_port)
             } else {
                 if (mAck_Count > 0) {
                     SendFileData(UPGRADE_DATA.toInt(), false)
@@ -379,9 +393,11 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                 //MyApplication.saveSharedPreferences(Constants.PREF_VALUE_NONE);
                 sendPostHandler(UPGRADE_VIEW.toInt(), data[0].toInt(), VIEW_SUCCESS)
                 Log.e("Upgrade", "UPGRADE:SU")
+
+                UpdateFragment.instance?.UpdateText("$m_port Update Success", m_port)
             }
             else -> {
-                Log.w("UPDATE","Unknown Command !!!")
+                Log.w("UPDATE", "Unknown Command !!!")
                 rcv_ret = false
                 dumpRawPacket("ParserData:unknown cmd=" + String.format("%02x ", cmd), data)
             }
@@ -402,18 +418,32 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
     private fun resultUpdate(succes: Boolean) {
 
         //mUpdateFile = null;
-
         if (succes) { // Update Success !
-            Log.e("Sucess", "message")
-            // shared preferences 값 초기화
+            when (m_port) {
+                ST_MCU_0 -> {
+                    Log.e("Sucess", "message")
 
-            sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
-            closeSerial()
-            Commander.update_complete = true
+                    sendMCUPacket(FD_RQST.CMD_REBOOT, byteArrayOf(FD_RQST.DATA_REBOOT))
+                    timerHelper.stopTimer()
+                    closeSerial()
+                    Commander.update_complete = true
+                    Log.e("STUpdate", "ttyS4 Update Complete")
+                    return
 
-            /*
-            when(u_sequence){
-                0->{
+                    /*
+                    Log.e("STUpdate", "Start Update ttyS5")
+                    Commander.update_ready = false
+                    Commander.update_complete = false
+                    UpdateFragment.instance?.UpdateText("Sending UPDATE_READY to ttyS5")
+
+                    Commander.openSerialClient(ST_MCU_1)
+                    Commander.sendCommand(Command.UPDATE_READY, ST_MCU_1)
+                    Log.e("STUpdate", "Waiting for update_ready")
+                    while (!Commander.update_ready) Thread.sleep(500)
+                    Log.e("STUpdate", "update ready")
+
+                    m_port = ST_MCU_1
+
                     file_input!!.close()
                     file_input = null
                     g_index = 1
@@ -421,19 +451,16 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                     mAck_Count = ACK_COUNT
                     mUpdateFile = null
                     _checkBuf = null
-                    if (openSerial("/dev/ttyS5", 19200)) {//115200
-                        mUpdateFile = File(m_path)
+                    if (openSerial(m_port, 19200)) {//115200
                         Log.e("ST UP", "Start : " + mUpdateFile!!.absolutePath + " : " + mUpdateFile!!.isFile)
-                        u_sequence++
-                        setPrefInt("sequence", 1)
-
                         checkStartUpdate()
                     }
+                    */
                 }
-                1->{
+                ST_MCU_1 -> {
+                    Log.e("STUpdate", "Update Complete. Reboot")
                     val runtime = Runtime.getRuntime()
                     try {
-                        setPrefInt("sequence", 0)
                         Thread.sleep(3000)
                         val cmd = "reboot"
                         runtime.exec(cmd)
@@ -442,10 +469,41 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
                     }
                 }
             }
-            */
         } else { // Update Fail
 
         }
+        /*
+        when(u_sequence){
+            0->{
+                file_input!!.close()
+                file_input = null
+                g_index = 1
+                g_count = 0
+                mAck_Count = ACK_COUNT
+                mUpdateFile = null
+                _checkBuf = null
+                if (openSerial("/dev/ttyS5", 19200)) {//115200
+                    mUpdateFile = File(m_path)
+                    Log.e("ST UP", "Start : " + mUpdateFile!!.absolutePath + " : " + mUpdateFile!!.isFile)
+                    u_sequence++
+                    setPrefInt("sequence", 1)
+
+                    checkStartUpdate()
+                }
+            }
+            1->{
+                val runtime = Runtime.getRuntime()
+                try {
+                    setPrefInt("sequence", 0)
+                    Thread.sleep(3000)
+                    val cmd = "reboot"
+                    runtime.exec(cmd)
+                } catch (e: Exception) {
+                    e.fillInStackTrace()
+                }
+            }
+        }
+        */
     }
 
 
@@ -563,13 +621,13 @@ class UpdateST(context: Context, path: String, port :String) : UpdateMCU(context
         return sum
     }
 
-    private fun setPrefInt(key : String, value : Int) {
+    private fun setPrefInt(key: String, value: Int) {
         val prefs = mContext.getSharedPreferences("Update", Context.MODE_PRIVATE)
         val editor = prefs!!.edit()
         editor.putInt(key, value).apply()
     }
 
-    private fun getPrefInt(key : String) : Int{
+    private fun getPrefInt(key: String): Int {
         val prefs = mContext.getSharedPreferences("Update", Context.MODE_PRIVATE)
         return prefs.getInt(key, 0)
     }

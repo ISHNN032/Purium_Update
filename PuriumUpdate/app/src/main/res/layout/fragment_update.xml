@@ -13,14 +13,14 @@
             android:id="@+id/update_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="240dp"
             android:text="Please keep the system powered for safety.\n\nWhen the update is complete,\nthe system will automatically reboot."
             android:textAlignment="center"
             android:textColor="#AAAAAA"
             android:textSize="24sp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
 
     <ProgressBar
@@ -43,7 +43,7 @@
             android:id="@+id/textView_ttyS4_Progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0/21"
+            android:text="Waiting . . ."
             android:textSize="24sp"
             android:textColor="@color/color_normal_text"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -72,7 +72,7 @@
             android:id="@+id/textView_ttyS5_Progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0/21"
+            android:text="Waiting . . ."
             android:textSize="24sp"
             android:textColor="@color/color_normal_text"
             app:layout_constraintLeft_toLeftOf="parent"
