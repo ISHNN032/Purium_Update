@@ -83,7 +83,7 @@ class UpdateFragment : Fragment() {
                     override fun run() {
 
                         if(port == ST_MCU_1 && !Commander.update_complete){
-                            handler.postDelayed(this, 10000)
+                            handler.postDelayed(this, 5000)
                             return
                         }
 
@@ -108,6 +108,7 @@ class UpdateFragment : Fragment() {
                         }
 
                         //update_ready 에 대한 ACK 가 3회까지 오지 않았을 경우
+                        UpdateText("$port UPDATE_READY RETRY with GPIO reset", port)
                         for(i in 1..3){
                             Log.e("STUpdate", "update_ready ACK Failed! reset MCU power!")
                             var out: BufferedWriter?

@@ -93,19 +93,6 @@
             app:layout_constraintLeft_toLeftOf="@id/main_button_st"
             app:layout_constraintRight_toRightOf="@id/main_button_st"/>
 
-    <Button
-            android:id="@+id/main_button_apk"
-            android:layout_width="300dp"
-            android:layout_height="90dp"
-            android:background="#444444"
-            android:text="APK"
-            android:textColor="#AAAAAA"
-            android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/main_button_os"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/main_button_st"/>
-
     <FrameLayout
             android:id="@+id/update_fragment"
             android:layout_width="match_parent"

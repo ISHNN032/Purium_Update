@@ -81,7 +81,6 @@ class MainActivity : AppCompatActivity() {
 
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
-                                main_button_apk.isEnabled = false
                             }
                         }
                         .setNegativeButton(
@@ -113,7 +112,6 @@ class MainActivity : AppCompatActivity() {
                                     .commit()
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
-                                main_button_apk.isEnabled = false
                             }
                         })
                         .setNegativeButton(

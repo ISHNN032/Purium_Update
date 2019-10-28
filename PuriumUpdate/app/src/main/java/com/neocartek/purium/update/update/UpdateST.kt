@@ -459,14 +459,17 @@ class UpdateST(context: Context, path: String, port: String) : UpdateMCU(context
                 }
                 ST_MCU_1 -> {
                     Log.e("STUpdate", "Update Complete. Reboot")
-                    val runtime = Runtime.getRuntime()
-                    try {
-                        Thread.sleep(3000)
-                        val cmd = "reboot"
-                        runtime.exec(cmd)
-                    } catch (e: Exception) {
-                        e.fillInStackTrace()
+                    val handler = Handler()
+                    val runnable = Runnable {
+                        val runtime = Runtime.getRuntime()
+                        try {
+                            val cmd = "reboot"
+                            runtime.exec(cmd)
+                        } catch (e: Exception) {
+                            e.fillInStackTrace()
+                        }
                     }
+                    handler.postDelayed(runnable, 3000)
                 }
             }
         } else { // Update Fail
