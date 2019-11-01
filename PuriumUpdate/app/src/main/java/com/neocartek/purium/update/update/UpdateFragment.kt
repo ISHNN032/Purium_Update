@@ -108,7 +108,6 @@ class UpdateFragment : Fragment() {
                         }
 
                         //update_ready 에 대한 ACK 가 3회까지 오지 않았을 경우
-                        UpdateText("$port UPDATE_READY RETRY with GPIO reset", port)
                         for(i in 1..3){
                             Log.e("STUpdate", "update_ready ACK Failed! reset MCU power!")
                             var out: BufferedWriter?
@@ -118,7 +117,7 @@ class UpdateFragment : Fragment() {
                                 out.write("0")
                                 out.close()
 
-                                Thread.sleep(3000)
+                                Thread.sleep(1000)
 
                                 file = FileWriter("/sys/class/gpio_sw/PC1/data", false)
                                 out = BufferedWriter(file)
@@ -129,26 +128,27 @@ class UpdateFragment : Fragment() {
                             } catch (e: IOException) {
                                 e.printStackTrace()
                             }
-                            Thread.sleep(5000)
+                            Thread.sleep(3000)
                             if(Commander.update_ready) {
                                 Log.e("STUpdate", "update ready - download mode")
                                 UpdateST(context!!, Commander.update_File.absolutePath, port)
                                 return
                             }
                         }
-                        //3번 GPIO 리셋 후, 문제가 발생했을 경우
+                        //3번 GPIO 리셋 후, Boot Complete 를 받지 못한 경우
                         activity?.runOnUiThread {
                             // 다이얼로그
                             val builder =
                                 AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppCompat_Light_Dialog))
-                            builder.setTitle("ERROR with Serial $port")
-                                .setMessage("Cannot get info from Serial port : $port")
-                                .setCancelable(false)
-                                .setPositiveButton("OK") { dialog, _ ->
-                                    dialog.dismiss()
-                                }
-                            builder.show()
-                        }
+                        builder.setTitle("ERROR with Serial $port")
+                            .setMessage("Cannot get info from Serial port : $port")
+                            .setCancelable(false)
+                            .setPositiveButton("OK") { dialog, _ ->
+                                dialog.dismiss()
+                                activity?.finishAffinity()
+                            }
+                        builder.show()
+                    }
                     }
                 }
                 // trigger first time
@@ -156,11 +156,14 @@ class UpdateFragment : Fragment() {
             }
 
             Constants.PREF_VALUE_OTA -> {
-                var job = GlobalScope.launch {
-                    SystemClock.sleep(2000)
+                val handler = Handler()
+                val runnable = Runnable {
                     try {
                         copyFile(File(Commander.update_File.absolutePath), File("/cache/ota.zip"))
-                        Log.d("update", "MainActivity copy file ${Commander.update_File.absolutePath} /cache/ota.zip")
+                        Log.d(
+                            "update",
+                            "MainActivity copy file ${Commander.update_File.absolutePath} /cache/ota.zip"
+                        )
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -172,7 +175,7 @@ class UpdateFragment : Fragment() {
                         e.printStackTrace()
                     }
                 }
-                job.join()
+                handler.postDelayed(runnable, 2000)
             }
         }
     }
