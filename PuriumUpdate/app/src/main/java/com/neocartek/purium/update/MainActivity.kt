@@ -1,19 +1,13 @@
 package com.neocartek.purium.update
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.RecoverySystem
 import android.os.SystemClock
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.neocartek.purium.update.update.UpdateFragment
-import com.neocartek.purium.update.update.UpdateST
-import com.neocartek.purium.update.update_intro.Command
-import com.neocartek.purium.update.update_intro.ST_MCU_0
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.util.*
@@ -38,20 +32,34 @@ class MainActivity : AppCompatActivity() {
         main_button_os.isEnabled = false
         main_button_st.isEnabled = false
 
+
         var path = intent.getStringExtra("Path")
         val types = intent.getIntArrayExtra("Files")
 
         //var path = "/storage/udiskh"
         //var types = intArrayOf(1)
 
-        if(path != null)
+        if(path != null) {
             Log.e("Path Extra", path)
+        }
 
-        if (types != null)
+        if (types != null) {
             for (i in types) {
                 Log.e("Files Extra", "" + i)
                 update(i, path)
             }
+        }
+
+        main_button_app.setOnClickListener {
+            Commander.update_path = path
+            Commander.update_Type = Constants.PREF_VALUE_APP
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.update_fragment, UpdateFragment())
+                .commit()
+            main_button_os.isEnabled = false
+            main_button_st.isEnabled = false
+            main_button_app.isEnabled = false
+        }
     }
 
 
@@ -81,6 +89,7 @@ class MainActivity : AppCompatActivity() {
 
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
+                                main_button_app.isEnabled = false
                             }
                         }
                         .setNegativeButton(
@@ -112,6 +121,7 @@ class MainActivity : AppCompatActivity() {
                                     .commit()
                                 main_button_os.isEnabled = false
                                 main_button_st.isEnabled = false
+                                main_button_app.isEnabled = false
                             }
                         })
                         .setNegativeButton(
