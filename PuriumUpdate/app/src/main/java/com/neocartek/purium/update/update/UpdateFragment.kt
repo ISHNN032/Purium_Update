@@ -209,22 +209,27 @@ class UpdateFragment : Fragment() {
                     try {
                         try {
                             //cache 로 update shell script 복사
-                            copyFile(File("${Commander.update_path}/${Constants.FILE_NAME_UPDATE_SHELL}"),
-                                File("/cache/${Constants.FILE_NAME_UPDATE_SHELL}"))
+//                            copyFile(File("${Commander.update_path}/${Constants.FILE_NAME_UPDATE_SHELL}"),
+//                                File("/cache/${Constants.FILE_NAME_UPDATE_SHELL}"))
                         } catch (e: Exception) {
                             e.printStackTrace()
                             Log.e("Exception", e.toString())
+                            activity?.runOnUiThread {
+                                update_text.text = "${Constants.FILE_NAME_UPDATE_SHELL} Not Found.\nClose App Update in 3sec."
+                            }
+                            SystemClock.sleep(3)
+                            activity?.onBackPressed()
                         }
 
                         val runtime = Runtime.getRuntime()
-                        val process = runtime.exec("/cache/${Constants.FILE_NAME_UPDATE_SHELL}\n")
+                        val process = runtime.exec("/storage/${Constants.FILE_NAME_UPDATE_SHELL}\n")
                         val input = BufferedReader(InputStreamReader(process.inputStream))
                         val error = BufferedReader(InputStreamReader(process.errorStream))
                         var log = ""
                         var line = input.readLine()
                         var line_e = error.readLine()
                         while (line != null || line_e != null) {
-                            if(! line_e.isNullOrEmpty()){
+                            if(! line.isNullOrEmpty()){
                                 Log.e("line", line)
                                 log += line + "\n"
                                 line = input.readLine()
@@ -234,9 +239,9 @@ class UpdateFragment : Fragment() {
                                 log += line_e + "\n"
                                 line_e = error.readLine()
                             }
-                            activity?.runOnUiThread {
-                                update_text.text = log
-                            }
+//                            activity?.runOnUiThread {
+//                                update_text.text = log
+//                            }
                         }
                         input.close()
                         error.close()
@@ -244,94 +249,13 @@ class UpdateFragment : Fragment() {
                         Log.e("process", "fin")
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        Log.e("Exception Occurred", e.message)
                     }
                 }
                 handler.postDelayed(runnable, 2000)
             }
         }
     }
-
-    private fun uninstallPackage(context: Context, packageName: String): Boolean {
-        val packageManger: PackageManager = context.packageManager
-        val packageInstaller =
-            packageManger.packageInstaller
-        val params =
-            PackageInstaller.SessionParams(
-                PackageInstaller.SessionParams.MODE_FULL_INSTALL
-            )
-        Log.e("uninstallPackage", "setAppPackageName")
-        params.setAppPackageName(packageName)
-        var sessionId = 0
-        sessionId = try {
-            packageInstaller.createSession(params)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            return false
-        }
-        Log.e("uninstallPackage", "packageInstaller.uninstall")
-        packageInstaller.uninstall(
-            packageName, PendingIntent.getBroadcast(
-                context, sessionId,
-                Intent("Android.intent.action.MAIN"), 0
-            ).intentSender
-        )
-        Log.e("uninstallPackage", "uninstall Fin")
-        return true
-    }
-
-    private fun installPackage(context: Context,
-        packageName: String, packagePath: String): Boolean {
-//        val apkUri = FileProvider.getUriForFile(
-//            context!!,
-//            "${BuildConfig.APPLICATION_ID}.provider",
-//            File(apkPath)
-//        )
-//        val intent = Intent(Intent.ACTION_VIEW)   // 2
-//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)  // 3
-//        intent.setDataAndType(
-//            apkUri,
-//            "application/vnd.android.package-archive"
-//        )  // 4
-//        startActivity(intent)
-
-        val packageManger = context.packageManager
-        val packageInstaller =
-            packageManger.packageInstaller
-        val params =
-            PackageInstaller.SessionParams(
-                PackageInstaller.SessionParams.MODE_FULL_INSTALL
-            )
-        Log.e("installPackage", "setAppPackageName")
-        params.setAppPackageName(packageName)
-        return try {
-            val sessionId = packageInstaller.createSession(params)
-            val session =
-                packageInstaller.openSession(sessionId)
-            val out = session.openWrite("$packageName.apk", 0, -1)
-            Log.e("installPackage", "IOUtils.copy")
-            IOUtils.copy(
-                File(packagePath).inputStream(),
-                out
-            ) //read the apk content and write it to out
-            session.fsync(out)
-            out.close()
-            Log.e("installPackage", "installing...")
-            session.commit(
-                PendingIntent.getBroadcast(
-                    context, sessionId,
-                    Intent("Android.intent.action.MAIN"), 0
-                ).intentSender
-            )
-            Log.e("installPackage", "install Fin")
-            true
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Log.e("installPackage", "install Fail")
-            false
-        }
-    }
-
 
     fun UpdateText(text: String, port: String) {
         activity?.runOnUiThread {

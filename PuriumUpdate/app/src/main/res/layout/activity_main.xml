@@ -64,7 +64,6 @@
             android:text="APP Update"
             android:textColor="#AAAAAA"
             android:textSize="24sp"
-            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/main_button_os"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
