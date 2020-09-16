@@ -249,6 +249,7 @@ class UpdateFragment : Fragment() {
                         val process = pb.start()
                         Thread(ProcessTestRunnable(process)).start();
                         process.waitFor()
+                        delay(3000)
                         Log.e("APPUpdate", "process fin")
                         if (updated) {
                             val runtime = Runtime.getRuntime()
@@ -283,41 +284,13 @@ class UpdateFragment : Fragment() {
         }
     }
 
-    var updateInfo = ""
     var updated = false
     val updateHandler = Handler {
         when (it.what) {
-            MSG_UPDATE_MANAGER_SUCCEED -> {
+            MSG_UPDATE_MANAGER_SUCCEED, MSG_UPDATE_PURIUM_SUCCEED
+                ,MSG_UPDATE_MEDIA_SUCCEED, MSG_UPDATE_UPDATE_SUCCEED -> {
                 activity?.runOnUiThread {
-                    Log.e("APPUpdate", "MANAGER updated!")
-                    updateInfo += "MANAGER UPDATED\n"
                     updated = true;
-                    update_text.text = updateInfo
-                }
-            }
-            MSG_UPDATE_PURIUM_SUCCEED -> {
-                activity?.runOnUiThread {
-                    Log.e("APPUpdate", "PURIUM updated!")
-                    updateInfo += "PURIUM UPDATED\n"
-                    updated = true;
-                    update_text.text = updateInfo
-                }
-            }
-            MSG_UPDATE_MEDIA_SUCCEED -> {
-                activity?.runOnUiThread {
-                    Log.e("APPUpdate", "MEDIA updated!")
-                    updateInfo += "MEIDA UPDATED\n"
-                    updated = true;
-                    update_text.text = updateInfo
-                }
-            }
-            MSG_UPDATE_UPDATE_SUCCEED -> {
-                activity?.runOnUiThread {
-                    Log.e("APPUpdate", "UPDATE updated!")
-                    updateInfo += "UPDATE UPDATED\n"
-                    updated = true;
-                    //update 앱이 업데이트 될 경우, 해당 텍스트를 표시할 수 없음.
-                    //update_text.text = updateInfo
                 }
             }
         }

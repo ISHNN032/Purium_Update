@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
                 update(i, path)
             }
         }
+        version_text.text = BuildConfig.VERSION_NAME
     }
 
 
@@ -121,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             Constants.PREF_VALUE_APP -> {
-                main_button_st.setTextColor(Color.WHITE)
+                main_button_app.setTextColor(Color.WHITE)
                 main_button_app.isEnabled = true
                 main_button_app.setOnClickListener {
                     Commander.update_path = path
