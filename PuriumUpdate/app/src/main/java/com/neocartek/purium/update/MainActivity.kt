@@ -49,17 +49,6 @@ class MainActivity : AppCompatActivity() {
                 update(i, path)
             }
         }
-
-        main_button_app.setOnClickListener {
-            Commander.update_path = path
-            Commander.update_Type = Constants.PREF_VALUE_APP
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.update_fragment, UpdateFragment())
-                .commit()
-            main_button_os.isEnabled = false
-            main_button_st.isEnabled = false
-            main_button_app.isEnabled = false
-        }
     }
 
 
@@ -130,6 +119,20 @@ class MainActivity : AppCompatActivity() {
                         .show()
                 }
                 return
+            }
+            Constants.PREF_VALUE_APP -> {
+                main_button_st.setTextColor(Color.WHITE)
+                main_button_app.isEnabled = true
+                main_button_app.setOnClickListener {
+                    Commander.update_path = path
+                    Commander.update_Type = Constants.PREF_VALUE_APP
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.update_fragment, UpdateFragment())
+                        .commit()
+                    main_button_os.isEnabled = false
+                    main_button_st.isEnabled = false
+                    main_button_app.isEnabled = false
+                }
             }
         }
     }

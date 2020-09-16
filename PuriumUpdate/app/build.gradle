@@ -10,8 +10,8 @@ android {
         applicationId "com.neocartek.purium.update"
         minSdkVersion 25
         targetSdkVersion 28
-        versionCode 112
-        versionName "1.1.2"
+        versionCode 113
+        versionName "1.1.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -36,7 +36,8 @@ dependencies {
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation files('libs\\commons-io-2.7.jar')
+    implementation files('libs/commons-io-2.7.jar')
+    implementation files('libs/commons-exec-1.3.jar')
     testImplementation 'junit:junit:4.12'
     compileOnly files('libs/classes.jar')
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

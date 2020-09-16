@@ -1,26 +1,23 @@
 package com.neocartek.purium.update.update
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageInstaller
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.RecoverySystem
 import android.os.SystemClock
 import android.support.v4.app.Fragment
-import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.view.ContextThemeWrapper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.neocartek.purium.update.BuildConfig
 import com.neocartek.purium.update.Commander
 import com.neocartek.purium.update.Constants
+import com.neocartek.purium.update.Constants.MSG_UPDATE_MANAGER_SUCCEED
+import com.neocartek.purium.update.Constants.MSG_UPDATE_MEDIA_SUCCEED
+import com.neocartek.purium.update.Constants.MSG_UPDATE_PURIUM_SUCCEED
+import com.neocartek.purium.update.Constants.MSG_UPDATE_UPDATE_SUCCEED
 import com.neocartek.purium.update.R
 import com.neocartek.purium.update.update_intro.Command
 import com.neocartek.purium.update.update_intro.ST_MCU_0
@@ -28,10 +25,11 @@ import com.neocartek.purium.update.update_intro.ST_MCU_1
 import kotlinx.android.synthetic.main.fragment_update.*
 import kotlinx.android.synthetic.main.fragment_update.progressBar_ttyS4
 import kotlinx.android.synthetic.main.fragment_update_app.*
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.*
-import org.apache.commons.io.IOUtils;
 
 
 class UpdateFragment : Fragment() {
@@ -204,57 +202,144 @@ class UpdateFragment : Fragment() {
             }
 
             Constants.PREF_VALUE_APP -> {
-                val handler = Handler()
-                val runnable = Runnable {
+                GlobalScope.launch {
                     try {
                         try {
                             //cache 로 update shell script 복사
-//                            copyFile(File("${Commander.update_path}/${Constants.FILE_NAME_UPDATE_SHELL}"),
-//                                File("/cache/${Constants.FILE_NAME_UPDATE_SHELL}"))
+                            copyFile(
+                                File("storage/udisk3/${Constants.FILE_NAME_UPDATE_SHELL}"),
+                                File("/cache/${Constants.FILE_NAME_UPDATE_SHELL}")
+                            )
                         } catch (e: Exception) {
                             e.printStackTrace()
                             Log.e("Exception", e.toString())
                             activity?.runOnUiThread {
-                                update_text.text = "${Constants.FILE_NAME_UPDATE_SHELL} Not Found.\nClose App Update in 3sec."
+                                update_text.text =
+                                    "${Constants.FILE_NAME_UPDATE_SHELL} Not Found.\nClose App Update in 3sec."
                             }
                             SystemClock.sleep(3)
                             activity?.onBackPressed()
                         }
-
-                        val runtime = Runtime.getRuntime()
-                        val process = runtime.exec("/storage/${Constants.FILE_NAME_UPDATE_SHELL}\n")
-                        val input = BufferedReader(InputStreamReader(process.inputStream))
-                        val error = BufferedReader(InputStreamReader(process.errorStream))
-                        var log = ""
-                        var line = input.readLine()
-                        var line_e = error.readLine()
-                        while (line != null || line_e != null) {
-                            if(! line.isNullOrEmpty()){
-                                Log.e("line", line)
-                                log += line + "\n"
-                                line = input.readLine()
-                            }
-                            if(! line_e.isNullOrEmpty()){
-                                Log.e("line_e", line_e)
-                                log += line_e + "\n"
-                                line_e = error.readLine()
-                            }
+//                        val runtime = Runtime.getRuntime()
+//                        val process = runtime.exec("/cache/${Constants.FILE_NAME_UPDATE_SHELL}\n")
+//                        val input = BufferedReader(InputStreamReader(process.inputStream))
+//                        val error = BufferedReader(InputStreamReader(process.errorStream))
+//                        var log = ""
+//                        var line = input.readLine()
+//                        var line_e = error.readLine()
+//                        while (line != null || line_e != null) {
+//                            if(! line.isNullOrEmpty()){
+//                                Log.e("line", line + "something")
+//                                log += line + "\n"
+//                                line = input.readLine()
+//                            }
+//                            if(! line_e.isNullOrEmpty()){
+//                                Log.e("line_e", line_e + "something")
+//                                log += line_e + "\n"
+//                                line_e = error.readLine()
+//                            }
 //                            activity?.runOnUiThread {
 //                                update_text.text = log
 //                            }
-                        }
-                        input.close()
-                        error.close()
+//                        }
+
+                        val pb = ProcessBuilder("/cache/${Constants.FILE_NAME_UPDATE_SHELL}")
+                        pb.redirectErrorStream(true);
+                        pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        val process = pb.start()
+                        Thread(ProcessTestRunnable(process)).start();
                         process.waitFor()
-                        Log.e("process", "fin")
+                        Log.e("APPUpdate", "process fin")
+                        if (updated) {
+                            val runtime = Runtime.getRuntime()
+                            try {
+                                val cmd = "reboot"
+                                runtime.exec(cmd)
+                            } catch (e: Exception) {
+                                e.fillInStackTrace()
+                            }
+                        } else {
+                            activity?.runOnUiThread {
+                                // 다이얼로그
+                                val builder =
+                                    AlertDialog.Builder(
+                                        ContextThemeWrapper(
+                                            context,
+                                            R.style.Theme_AppCompat_Light_Dialog
+                                        )
+                                    )
+                                builder.setTitle("Update Result")
+                                    .setMessage("Nothing Updated\n")
+                                builder.show()
+                            }
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
                         Log.e("Exception Occurred", e.message)
                     }
                 }
-                handler.postDelayed(runnable, 2000)
+                return
             }
         }
+    }
+
+    var updateInfo = ""
+    var updated = false
+    val updateHandler = Handler {
+        when (it.what) {
+            MSG_UPDATE_MANAGER_SUCCEED -> {
+                activity?.runOnUiThread {
+                    Log.e("APPUpdate", "MANAGER updated!")
+                    updateInfo += "MANAGER UPDATED\n"
+                    updated = true;
+                    update_text.text = updateInfo
+                }
+            }
+            MSG_UPDATE_PURIUM_SUCCEED -> {
+                activity?.runOnUiThread {
+                    Log.e("APPUpdate", "PURIUM updated!")
+                    updateInfo += "PURIUM UPDATED\n"
+                    updated = true;
+                    update_text.text = updateInfo
+                }
+            }
+            MSG_UPDATE_MEDIA_SUCCEED -> {
+                activity?.runOnUiThread {
+                    Log.e("APPUpdate", "MEDIA updated!")
+                    updateInfo += "MEIDA UPDATED\n"
+                    updated = true;
+                    update_text.text = updateInfo
+                }
+            }
+            MSG_UPDATE_UPDATE_SUCCEED -> {
+                activity?.runOnUiThread {
+                    Log.e("APPUpdate", "UPDATE updated!")
+                    updateInfo += "UPDATE UPDATED\n"
+                    updated = true;
+                    //update 앱이 업데이트 될 경우, 해당 텍스트를 표시할 수 없음.
+                    //update_text.text = updateInfo
+                }
+            }
+        }
+        true
+    }
+
+
+    internal class ProcessTestRunnable(var p: Process) : Runnable {
+        var br: BufferedReader? = null
+        override fun run() {
+            try {
+                val isr = InputStreamReader(p.inputStream)
+                br = BufferedReader(isr)
+                var line: String? = null
+                while (br!!.readLine().also { line = it } != null) {
+                    Log.e("line", line)
+                }
+            } catch (ex: IOException) {
+                ex.printStackTrace()
+            }
+        }
+
     }
 
     fun UpdateText(text: String, port: String) {

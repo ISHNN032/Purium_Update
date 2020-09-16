@@ -16,6 +16,11 @@ object Constants {
     const val PACKAGE_NAME_PURIUM = "com.example.test"
     const val PACKAGE_NAME_MEDIA = "com.awesomeit.purium"
 
+    const val MSG_UPDATE_MANAGER_SUCCEED = 0
+    const val MSG_UPDATE_PURIUM_SUCCEED = 1
+    const val MSG_UPDATE_MEDIA_SUCCEED = 2
+    const val MSG_UPDATE_UPDATE_SUCCEED = 3
+
     val FILE_PATH_STORAGE = "storage"
 
     val PREF_KEY_UPDATE = "pref_key_update"
