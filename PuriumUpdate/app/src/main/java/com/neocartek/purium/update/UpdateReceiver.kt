@@ -14,6 +14,9 @@ import com.neocartek.purium.update.Constants.PACKAGE_NAME_MEDIA
 import com.neocartek.purium.update.Constants.PACKAGE_NAME_PURIUM
 import com.neocartek.purium.update.Constants.PACKAGE_NAME_UPDATE
 import com.neocartek.purium.update.update.UpdateFragment
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class UpdateReceiver : BroadcastReceiver(){
     override fun onReceive(context: Context, intent: Intent) {
@@ -50,16 +53,17 @@ class UpdateReceiver : BroadcastReceiver(){
                         )
                         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         context.startActivity(i)
-
-                        Thread.sleep(3000)
                         Toast.makeText(context, "Update app updated.", Toast.LENGTH_SHORT).show()
-                        Thread.sleep(2000)
-                        val runtime = Runtime.getRuntime()
-                        try {
-                            val cmd = "reboot"
-                            runtime.exec(cmd)
-                        } catch (e: Exception) {
-                            e.fillInStackTrace()
+
+                        GlobalScope.launch {
+                            delay(6000)
+                            val runtime = Runtime.getRuntime()
+                            try {
+                                val cmd = "reboot"
+                                runtime.exec(cmd)
+                            } catch (e: Exception) {
+                                e.fillInStackTrace()
+                            }
                         }
                     }
                 }

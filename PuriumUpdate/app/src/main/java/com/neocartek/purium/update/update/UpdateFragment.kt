@@ -18,6 +18,8 @@ import com.neocartek.purium.update.Constants.MSG_UPDATE_MANAGER_SUCCEED
 import com.neocartek.purium.update.Constants.MSG_UPDATE_MEDIA_SUCCEED
 import com.neocartek.purium.update.Constants.MSG_UPDATE_PURIUM_SUCCEED
 import com.neocartek.purium.update.Constants.MSG_UPDATE_UPDATE_SUCCEED
+import com.neocartek.purium.update.Constants.STORAGE_PATH
+import com.neocartek.purium.update.Constants.STORAGE_USB_PATH
 import com.neocartek.purium.update.R
 import com.neocartek.purium.update.update_intro.Command
 import com.neocartek.purium.update.update_intro.ST_MCU_0
@@ -30,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.*
+import kotlin.system.exitProcess
 
 
 class UpdateFragment : Fragment() {
@@ -203,11 +206,14 @@ class UpdateFragment : Fragment() {
 
             Constants.PREF_VALUE_APP -> {
                 GlobalScope.launch {
+                    val usbPath = findFolder(File(STORAGE_PATH));
+                    if(usbPath.isNullOrEmpty()) return@launch
+
                     try {
                         try {
                             //cache 로 update shell script 복사
                             copyFile(
-                                File("storage/udisk3/${Constants.FILE_NAME_UPDATE_SHELL}"),
+                                File("$STORAGE_PATH/$usbPath/${Constants.FILE_NAME_UPDATE_SHELL}"),
                                 File("/cache/${Constants.FILE_NAME_UPDATE_SHELL}")
                             )
                         } catch (e: Exception) {
@@ -217,8 +223,8 @@ class UpdateFragment : Fragment() {
                                 update_text.text =
                                     "${Constants.FILE_NAME_UPDATE_SHELL} Not Found.\nClose App Update in 3sec."
                             }
-                            SystemClock.sleep(3)
-                            activity?.onBackPressed()
+                            SystemClock.sleep(3000)
+                            exitProcess(-1)
                         }
 //                        val runtime = Runtime.getRuntime()
 //                        val process = runtime.exec("/cache/${Constants.FILE_NAME_UPDATE_SHELL}\n")
@@ -243,10 +249,15 @@ class UpdateFragment : Fragment() {
 //                            }
 //                        }
 
-                        val pb = ProcessBuilder("/cache/${Constants.FILE_NAME_UPDATE_SHELL}")
+
+                        var pb = ProcessBuilder("chmod","777","/cache/${Constants.FILE_NAME_UPDATE_SHELL}")
+                        var process = pb.start()
+                        process.waitFor()
+
+                        pb = ProcessBuilder("/cache/${Constants.FILE_NAME_UPDATE_SHELL}",usbPath)
                         pb.redirectErrorStream(true);
                         pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                        val process = pb.start()
+                        process = pb.start()
                         Thread(ProcessTestRunnable(process)).start();
                         process.waitFor()
                         delay(3000)
@@ -257,7 +268,7 @@ class UpdateFragment : Fragment() {
                                 val cmd = "reboot"
                                 runtime.exec(cmd)
                             } catch (e: Exception) {
-                                e.fillInStackTrace()
+                                exitProcess(-1)
                             }
                         } else {
                             activity?.runOnUiThread {
@@ -277,6 +288,7 @@ class UpdateFragment : Fragment() {
                     } catch (e: Exception) {
                         e.printStackTrace()
                         Log.e("Exception Occurred", e.message)
+                        exitProcess(-1)
                     }
                 }
                 return
@@ -288,7 +300,7 @@ class UpdateFragment : Fragment() {
     val updateHandler = Handler {
         when (it.what) {
             MSG_UPDATE_MANAGER_SUCCEED, MSG_UPDATE_PURIUM_SUCCEED
-                ,MSG_UPDATE_MEDIA_SUCCEED, MSG_UPDATE_UPDATE_SUCCEED -> {
+                , MSG_UPDATE_MEDIA_SUCCEED, MSG_UPDATE_UPDATE_SUCCEED -> {
                 activity?.runOnUiThread {
                     updated = true;
                 }
@@ -297,6 +309,23 @@ class UpdateFragment : Fragment() {
         true
     }
 
+    fun findFolder(file: File): String? {
+        if (file.exists()) {
+            if (file.isDirectory) {
+                val files: Array<File> = file.listFiles()
+                if (files.isNullOrEmpty()) {
+                    return null
+                } else if (files.isNotEmpty()) {
+                    for (value in files) {
+                        if (value.isDirectory && value.name.contains(STORAGE_USB_PATH)) {
+                            return value.name
+                        }
+                    }
+                }
+            }
+        }
+        return null
+    }
 
     internal class ProcessTestRunnable(var p: Process) : Runnable {
         var br: BufferedReader? = null

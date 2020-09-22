@@ -1,6 +1,9 @@
 package com.neocartek.purium.update
 
 object Constants {
+    val STORAGE_PATH = "/storage"
+    val STORAGE_USB_PATH = "udisk"
+
     val FILE_NAME_CPU_OTA = "update_ota_file.zip"
     val FILE_NAME_MCU_ST = "update_st_file.bin"
 
